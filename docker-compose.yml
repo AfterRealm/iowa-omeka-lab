@@ -1,0 +1,59 @@
+# Iowa Letters Lab — Omeka S 4.1.1 stack
+#
+# Three services:
+#   - db      MariaDB 11
+#   - fpm     Custom-built Omeka S 4.1.1 on PHP 8.3 FPM
+#   - web     nginx 1.27 fronting fpm
+#
+# A shared named volume (omeka_root) holds /var/www/html. On first start, FPM
+# populates it from the image; nginx then mounts it read-only.
+
+services:
+  db:
+    image: mariadb:11
+    container_name: omeka-db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpass
+      MARIADB_DATABASE: omeka
+      MARIADB_USER: omeka
+      MARIADB_PASSWORD: omekapass
+    volumes:
+      - db_data:/var/lib/mysql
+    networks: [omeka-net]
+
+  fpm:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: iowa-lab/omeka-s:4.1.1
+    container_name: omeka-fpm
+    restart: unless-stopped
+    depends_on: [db]
+    environment:
+      OMEKA_DB_HOST: db
+      OMEKA_DB_NAME: omeka
+      OMEKA_DB_USER: omeka
+      OMEKA_DB_PASSWORD: omekapass
+    volumes:
+      - omeka_root:/var/www/html
+    networks: [omeka-net]
+
+  web:
+    image: nginx:1.27-alpine
+    container_name: omeka-web
+    restart: unless-stopped
+    depends_on: [fpm]
+    ports:
+      - "8090:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - omeka_root:/var/www/html:ro
+    networks: [omeka-net]
+
+networks:
+  omeka-net:
+
+volumes:
+  db_data:
+  omeka_root:

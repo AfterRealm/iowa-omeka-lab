@@ -1,0 +1,11 @@
+# API key + tokens (specific to this local install — don't publish)
+api-credentials.env
+*.env
+
+# Common
+__pycache__/
+*.pyc
+.DS_Store
+node_modules/
+package-lock.json
+.cache/

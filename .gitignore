@@ -5,6 +5,7 @@ api-credentials.env
 # Common
 __pycache__/
 *.pyc
+*.log
 .DS_Store
 node_modules/
 package-lock.json
